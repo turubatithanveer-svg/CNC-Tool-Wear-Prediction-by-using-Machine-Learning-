@@ -18,7 +18,11 @@ if ROOT not in sys.path:
 # Auto-bootstrap Streamlit if invoked directly via bare python (e.g. Railway default `python app.py`)
 if not st.runtime.exists():
     from streamlit.web import cli as stcli
-    port = os.environ.get("PORT", "8501")
+    raw_port = os.environ.get("PORT", "8501")
+    try:
+        port = str(int(raw_port))
+    except (ValueError, TypeError):
+        port = "8501"
     sys.argv = [
         "streamlit",
         "run",
@@ -26,6 +30,8 @@ if not st.runtime.exists():
         f"--server.port={port}",
         "--server.address=0.0.0.0",
         "--server.headless=true",
+        "--server.fileWatcherType=none",
+        "--browser.gatherUsageStats=false",
     ]
     sys.exit(stcli.main())
 
