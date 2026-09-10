@@ -1,0 +1,32 @@
+# CNC Predictive Maintenance — Required Python Packages
+# Install with:  pip install -r requirements.txt
+
+# ── Core ─────────────────────────────────────────────
+streamlit>=1.35.0
+
+# ── Data Science ──────────────────────────────────────
+pandas>=2.0.0
+numpy>=1.24.0
+
+# ── Machine Learning ──────────────────────────────────
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+lightgbm>=4.0.0
+
+# ── Visualisation ─────────────────────────────────────
+plotly>=5.18.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# ── Model Storage ─────────────────────────────────────
+joblib>=1.3.0
+
+# ── Utilities ─────────────────────────────────────────
+scipy>=1.11.0
+statsmodels>=0.14.0
+
+fpdf2>=2.7.0
+openpyxl>=3.1.0
+
+# ── Computer Vision (Visual Prediction feature) ───────────────────────────────
+opencv-python-headless>=4.8.0
