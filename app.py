@@ -15,6 +15,20 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
+# Auto-bootstrap Streamlit if invoked directly via bare python (e.g. Railway default `python app.py`)
+if not st.runtime.exists():
+    from streamlit.web import cli as stcli
+    port = os.environ.get("PORT", "8501")
+    sys.argv = [
+        "streamlit",
+        "run",
+        os.path.abspath(__file__),
+        f"--server.port={port}",
+        "--server.address=0.0.0.0",
+        "--server.headless=true",
+    ]
+    sys.exit(stcli.main())
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Page Configuration (MUST be first Streamlit call)
 # ─────────────────────────────────────────────────────────────────────────────
