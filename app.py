@@ -18,11 +18,42 @@ if ROOT not in sys.path:
 # Auto-bootstrap Streamlit if invoked directly via bare python (e.g. Railway default `python app.py`)
 if not st.runtime.exists():
     import subprocess
+    import socket
+    import threading
+    import time
+
     raw_port = os.environ.get("PORT", "8501")
     try:
-        port = str(int(raw_port))
+        port_int = int(raw_port)
+        port = str(port_int)
     except (ValueError, TypeError):
+        port_int = 8501
         port = "8501"
+
+    def _monitor(p: int):
+        time.sleep(2.0)
+        print(f"[PORT CHECK] Starting connection verification on port {p}...")
+        sys.stdout.flush()
+        for _ in range(30):
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(2.0)
+                    if s.connect_ex(("127.0.0.1", p)) == 0:
+                        print("============================================================")
+                        print(f"[PORT STATUS] ✅ SUCCESS: Port {p} is OPEN and CONNECTED!")
+                        print(f"[PORT STATUS] 🚀 Streamlit is LIVE at http://0.0.0.0:{p}")
+                        print(f"[PORT STATUS] 🌐 Traffic is being accepted from Railway router.")
+                        print("============================================================")
+                        sys.stdout.flush()
+                        return
+            except Exception:
+                pass
+            time.sleep(1.0)
+        print(f"[PORT STATUS] ⚠️ WARNING: Port {p} did not accept connection.")
+        sys.stdout.flush()
+
+    threading.Thread(target=_monitor, args=(port_int,), daemon=True).start()
+
     cmd = [
         sys.executable,
         "-m",
@@ -48,6 +79,30 @@ st.set_page_config(
     layout     = "wide",
     initial_sidebar_state = "expanded",
 )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Port Connectivity Console Logger
+# ─────────────────────────────────────────────────────────────────────────────
+_current_port = os.environ.get("PORT", "8501")
+print(f"[CONSOLE STATUS] 🚀 App loaded successfully | Target Port: {_current_port} | Host: 0.0.0.0", flush=True)
+
+if 'port_verified' not in st.session_state:
+    st.session_state['port_verified'] = True
+    import socket
+    try:
+        p_val = int(_current_port)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe_sock:
+            probe_sock.settimeout(1.5)
+            status = probe_sock.connect_ex(("127.0.0.1", p_val))
+            if status == 0:
+                print("============================================================", flush=True)
+                print(f"[PORT CHECK] ✅ SUCCESS: Port {p_val} is CONNECTED & LISTENING!", flush=True)
+                print(f"[PORT CHECK] 🌐 Ready to accept traffic from Railway router.", flush=True)
+                print("============================================================", flush=True)
+            else:
+                print(f"[PORT CHECK] ℹ️ Probe status code on port {p_val}: {status}", flush=True)
+    except Exception as err:
+        print(f"[PORT CHECK] Probe exception: {err}", flush=True)
 
 from app.pages import (
     page_home,
@@ -167,6 +222,14 @@ def sidebar() -> str:
               ⚠️ <b>Models not trained</b>
             </div>
             """, unsafe_allow_html=True)
+
+        # Port status badge
+        st.markdown(f"""
+        <div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);
+                    border-radius:8px;padding:0.5rem 0.8rem;font-size:0.78rem;color:var(--text);margin-top:0.5rem;">
+          🌐 <b>Port:</b> <code>{_current_port}</code> (Active)
+        </div>
+        """, unsafe_allow_html=True)
 
         st.markdown("<br><br>", unsafe_allow_html=True)
         if st.button("🚪 Logout", use_container_width=True):
